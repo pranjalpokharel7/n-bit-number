@@ -1,4 +1,6 @@
 pub mod bigint;
+pub mod constants;
+pub mod operation;
 
 #[cfg(test)]
 mod tests {
@@ -16,7 +18,7 @@ mod tests {
     #[test]
     fn test_identity() {
         let identity = BIGINT::new("0");
-        
+
         // additive identity added to itself should be result the same
         let b2 = BIGINT::new("0");
         let b3 = identity.clone() + b2.clone();
@@ -30,7 +32,49 @@ mod tests {
 
     #[test]
     fn test_to_string() {
+        // zero padding test
         let b2 = BIGINT::new("1000000000000000000");
         assert_eq!(b2.to_string(), "1000000000000000000");
+
+        // sign test
+        let b3 = BIGINT::new("-1");
+        assert_eq!(b3.to_string(), "-1");
+    }
+
+    #[test]
+    fn test_signed_operation() {
+        // adding two negative numbers
+        let b1 = BIGINT::new("-1");
+        let b2 = BIGINT::new("-1");
+        let b3 = b1 + b2;
+        assert_eq!(b3, BIGINT::new("-2"));
+    }
+
+    #[test]
+    fn test_comparision() {
+        let b1 = BIGINT::new("11000000000000000000");
+        let b2 = BIGINT::new("12000000000000000000");
+        let b3 = BIGINT::new("9000000000000000000");
+        assert!(b2 > b1);
+        assert!(b1 > b3);
+    }
+
+    #[test]
+    fn test_subtraction() {
+        let b1 = BIGINT::new("11000000000000000000");
+        let b2 = BIGINT::new("1000000000000000000");
+        let b3 = b1 - b2;
+        assert_eq!(b3, BIGINT::new("10000000000000000000"));
+
+        let b1 = BIGINT::new("10000000000000000000");
+        let b2 = BIGINT::new("1");
+        let b3 = b1 - b2;
+        assert_eq!(b3, BIGINT::new("9999999999999999999"));
+
+        let b1 = BIGINT::new("10000000000000000000");
+        let b2 = BIGINT::new("1");
+        let b3 = b2 - b1;
+        assert_eq!(b3.is_negative(), true);
+        assert_eq!(b3, BIGINT::new("-9999999999999999999"));
     }
 }
