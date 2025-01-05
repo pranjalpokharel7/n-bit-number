@@ -1,35 +1,20 @@
-use std::{
-    cmp::min,
-    fmt::{Debug, Display},
-    ops::Add,
-    str::FromStr,
-};
+use std::{cmp::min, fmt::{Debug, Display}, ops::Add, str::FromStr};
 
-trait BlockLimit {
-    const LIMIT: usize;
-}
-
-impl BlockLimit for u64 {
-    const LIMIT: usize = 18;
-}
+// maximum number that can be held by u64 - 18446744073709551615 - 20 digits
+// take chunks of 18 length (to stay on the safe side)
+static DIGITS_PER_BLOCK: usize = 18;
+static BLOCK_DIVISION_FACTOR: u64 = 10_u64.pow(DIGITS_PER_BLOCK as u32);
 
 #[derive(Debug, Clone)]
 pub struct BIGINT {
-    pub value: String,
-    _signed: bool,   // TODO: will handle this later
-    _repr: Vec<u64>, // TODO: need to make this a template as well?
+    _signed: bool, // TODO: will handle this later
+    _repr: Vec<u64>,
 }
 
-// maximum of u64 - 18446744073709551615
-// max of i64 - 9223372036854775807
-// take chunks of 18 length (to stay on the safe side)
-
-// TODO: make this a generic container that can return u8, u16, u32, u64 or u128
-// on second thought I don't see why I need this as a generic function hmm
-fn big_n_str_to_vec<T: FromStr + BlockLimit>(n: &str) -> Vec<T> {
+fn big_n_str_to_vec<T: FromStr>(n: &str) -> Vec<T> {
     let s_len = n.len();
     let mut j = s_len;
-    let mut i = j.saturating_sub(T::LIMIT);
+    let mut i = j.saturating_sub(DIGITS_PER_BLOCK);
     let mut result: Vec<T> = Vec::new();
     while j > 0 {
         let p_res: Result<T, T::Err> = n[i..j].parse();
@@ -37,7 +22,7 @@ fn big_n_str_to_vec<T: FromStr + BlockLimit>(n: &str) -> Vec<T> {
             Ok(p) => {
                 result.push(p);
                 j = i;
-                i = i.saturating_sub(18);
+                i = i.saturating_sub(DIGITS_PER_BLOCK);
             }
             Err(_) => panic!("Couldn't parse number - invalid literal"), // TODO: handle where exactly error occurs
         }
@@ -58,10 +43,30 @@ impl BIGINT {
         };
 
         Self {
-            value: n.to_owned(),
             _signed: signed,
             _repr: repr,
         }
+    }
+
+    pub fn get_repr(&self) -> &Vec<u64> {
+        &self._repr
+    }
+}
+
+impl PartialEq for BIGINT {
+    fn eq(&self, other: &Self) -> bool {
+        let len = self._repr.len();
+        if len != other._repr.len() {
+            return false;
+        }
+
+        for i in 0..len {
+            if self._repr[i] != other._repr[i] {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 
@@ -73,14 +78,13 @@ impl Add<BIGINT> for BIGINT {
         let j = rhs._repr.len();
         let k = min(i, j);
         let mut repr: Vec<u64> = Vec::new();
-        let factor = 10_u64.pow(18);
 
         let mut cin = 0;
         let mut t = 0;
         while t < k {
             let s = self._repr[t] + rhs._repr[t] + cin;
-            cin = s / factor;
-            repr.push(s % factor);
+            cin = s / BLOCK_DIVISION_FACTOR;
+            repr.push(s % BLOCK_DIVISION_FACTOR);
             t += 1;
         }
 
@@ -96,13 +100,7 @@ impl Add<BIGINT> for BIGINT {
             t += 1;
         }
 
-        let mut value = String::new();
-        for &n in &repr {
-            value += &n.to_string();
-        }
-
         BIGINT {
-            value,
             _signed: false,
             _repr: repr,
         }
@@ -111,6 +109,22 @@ impl Add<BIGINT> for BIGINT {
 
 impl Display for BIGINT {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.value)
+        let k = self._repr.len();
+        let mut repr_s: Vec<String> = Vec::new();
+
+        // since we don't have to pad for the last block (unnecessary leading zeroes)
+        repr_s.push(self._repr[k - 1].to_string());
+
+        // iterate in reverse because the numbers are stored least significant block first
+        for i in (0..=k - 2).rev() {
+            let s = self._repr[i].to_string();
+            repr_s.push(format!(
+                "{}{}",
+                "0".repeat((DIGITS_PER_BLOCK - s.len()) as usize),
+                s
+            ));
+        }
+        
+        write!(f, "{}", repr_s.join(""))
     }
 }
