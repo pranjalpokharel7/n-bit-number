@@ -55,8 +55,13 @@ mod tests {
         let b1 = BIGINT::new("11000000000000000000");
         let b2 = BIGINT::new("12000000000000000000");
         let b3 = BIGINT::new("9000000000000000000");
+        let b4 = BIGINT::new("-12000000000000000000");
+        let b5 = BIGINT::new("-9000000000000000000");
+
         assert!(b2 > b1);
         assert!(b1 > b3);
+        assert!(b1 > b4);
+        assert!(b5 > b4);
     }
 
     #[test]

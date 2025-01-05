@@ -69,17 +69,30 @@ impl Index<usize> for BIGINT {
 
 impl PartialEq for BIGINT {
     fn eq(&self, other: &Self) -> bool {
-        self._repr == other._repr
+        self._signed == other._signed && self._repr == other._repr
     }
 }
 
-// TODO: check if we actually need to reverse the iterator
+// sign handling logic courtesy of chat gpt :)
 impl PartialOrd for BIGINT {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self._repr
-            .iter()
-            .rev()
-            .partial_cmp(other._repr.iter().rev())
+        match (self._signed, other._signed) {
+            (true, false) => Some(std::cmp::Ordering::Less), // negative < positive
+            (false, true) => Some(std::cmp::Ordering::Greater), // positive > negative
+            _ => {
+                let cmp = self
+                    ._repr
+                    .iter()
+                    .rev()
+                    .partial_cmp(other._repr.iter().rev());
+
+                if self._signed {
+                    cmp.map(|ord| ord.reverse())
+                } else {
+                    cmp
+                }
+            }
+        }
     }
 }
 
