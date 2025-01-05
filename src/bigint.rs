@@ -1,8 +1,7 @@
-use crate::constants::{BLOCK_DIVISION_FACTOR, DIGITS_PER_BLOCK};
-use crate::operation::adc;
+use crate::constants::DIGITS_PER_BLOCK;
+use crate::operation::{op_add, op_sub};
 use std::ops::{Index, Sub};
 use std::{
-    cmp::min,
     fmt::{Debug, Display},
     ops::{Add, Neg},
     str::FromStr,
@@ -102,8 +101,7 @@ impl Sub<BIGINT> for BIGINT {
             unimplemented!();
         }
 
-        let mut result: Vec<u64> = Vec::new();
-        let (result_sign, a, b) = if self > rhs {
+        let (signed, a, b) = if self > rhs {
             (false, &self, &rhs)
         } else {
             (true, &rhs, &self)
@@ -111,27 +109,10 @@ impl Sub<BIGINT> for BIGINT {
 
         // a - b will always be possible given we handle sign negation
         // since a > b, a must have an equal or greater length to b
-        let mut t = 0;
-        let mut bout = 0;
-        while t < b._repr.len() {
-            // TODO: need to verify if there are edge case of overflow
-            if a[t] < b[t] + bout {
-                result.push(a[t] + BLOCK_DIVISION_FACTOR - b[t] - bout);
-                bout = 1;
-            } else {
-                result.push(a[t] - b[t] - bout);
-            }
-            t += 1;
-        }
-
-        while t < a._repr.len() {
-            result.push(a[t] - bout);
-            bout = 0;
-            t += 1;
-        }
+        let result = op_sub(&a, &b);
 
         Self {
-            _signed: result_sign,
+            _signed: signed,
             _repr: result,
         }
     }
@@ -142,12 +123,6 @@ impl Add<BIGINT> for BIGINT {
 
     // TODO: abstract this to another method that is sign agnostic
     fn add(self, rhs: Self) -> Self::Output {
-        let i = self._repr.len();
-        let j = rhs._repr.len();
-        let k = min(i, j);
-
-        let mut result: Vec<u64> = Vec::new();
-
         // same sign i.e. both true or both false indicates addition (XNOR)
         let sign_similarity = !(self._signed ^ rhs._signed);
         if !sign_similarity {
@@ -155,25 +130,7 @@ impl Add<BIGINT> for BIGINT {
             unimplemented!();
         }
 
-        let mut t = 0;
-
-        let mut cin = 0;
-        while t < k {
-            result.push(adc(&self[t], &rhs[t], &mut cin));
-            t += 1;
-        }
-
-        while t < i {
-            result.push(self[t] + cin);
-            cin = 0;
-            t += 1;
-        }
-
-        while t < j {
-            result.push(rhs[t] + cin);
-            cin = 0;
-            t += 1;
-        }
+        let result: Vec<u64> = op_add(&self, &rhs);
 
         BIGINT {
             _signed: self._signed,
@@ -199,7 +156,7 @@ impl Display for BIGINT {
                 s
             ));
         }
-        
+
         let sign = if self._signed { "-" } else { "" };
 
         write!(f, "{}{}", sign, repr_s.join(""))
