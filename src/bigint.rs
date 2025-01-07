@@ -50,11 +50,19 @@ impl BIGINT {
         }
     }
 
+    // need to rename this function (?)
+    pub fn new_sign_repr(sign: bool, repr: Vec<u64>) -> BIGINT {
+        BIGINT {
+            _signed: sign,
+            _repr: repr,
+        }
+    }
+
     pub fn get_repr(&self) -> &Vec<u64> {
         &self._repr
     }
 
-    pub fn is_negative(&self) -> bool {
+    pub fn get_sign(&self) -> bool {
         self._signed
     }
 }
@@ -109,24 +117,11 @@ impl Sub<BIGINT> for BIGINT {
     type Output = BIGINT;
 
     fn sub(self, rhs: BIGINT) -> Self::Output {
-        if self._signed || rhs._signed {
-            // TODO: handle this
-            unimplemented!();
-        }
-
-        let (signed, a, b) = if self > rhs {
-            (false, &self, &rhs)
-        } else {
-            (true, &rhs, &self)
-        };
-
-        // a - b will always be possible given we handle sign negation
-        // since a > b, a must have an equal or greater length to b
-        let result = op_sub(&a, &b);
-
-        Self {
-            _signed: signed,
-            _repr: result,
+        match (self._signed, rhs._signed) {
+            (false, false) => op_sub(&self, &rhs),
+            (false, true) => op_add(&self, &rhs),
+            (true, false) => op_add(&self, &rhs).neg(),
+            (true, true) => op_sub(&rhs, &self),
         }
     }
 }
@@ -134,20 +129,12 @@ impl Sub<BIGINT> for BIGINT {
 impl Add<BIGINT> for BIGINT {
     type Output = BIGINT;
 
-    // TODO: abstract this to another method that is sign agnostic
     fn add(self, rhs: Self) -> Self::Output {
-        // same sign i.e. both true or both false indicates addition (XNOR)
-        let sign_similarity = !(self._signed ^ rhs._signed);
-        if !sign_similarity {
-            // TODO: numbers with different signs not handled
-            unimplemented!();
-        }
-
-        let result: Vec<u64> = op_add(&self, &rhs);
-
-        BIGINT {
-            _signed: self._signed,
-            _repr: result,
+        match (self._signed, rhs._signed) {
+            (false, false) => op_add(&self, &rhs),
+            (false, true) => op_sub(&self, &rhs),
+            (true, false) => op_sub(&rhs, &self),
+            (true, true) => op_add(&self, &rhs).neg(),
         }
     }
 }

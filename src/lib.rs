@@ -48,6 +48,17 @@ mod tests {
         let b2 = BIGINT::new("-1");
         let b3 = b1 + b2;
         assert_eq!(b3, BIGINT::new("-2"));
+
+        // subtractions on different signs
+        let b1 = BIGINT::new("100000000000000000000");
+        let b2 = BIGINT::new("-100000000000000000000");
+        let b3 = b1 - b2;
+        assert_eq!(b3, BIGINT::new("200000000000000000000"));
+
+        let b1 = BIGINT::new("100000000000000000000");
+        let b2 = BIGINT::new("-100000000000000000000");
+        let b3 = b2 - b1;
+        assert_eq!(b3, BIGINT::new("-200000000000000000000"));
     }
 
     #[test]
@@ -79,7 +90,7 @@ mod tests {
         let b1 = BIGINT::new("10000000000000000000");
         let b2 = BIGINT::new("1");
         let b3 = b2 - b1;
-        assert_eq!(b3.is_negative(), true);
+        assert_eq!(b3.get_sign(), true);
         assert_eq!(b3, BIGINT::new("-9999999999999999999"));
     }
 }

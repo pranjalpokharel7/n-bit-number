@@ -19,10 +19,7 @@ fn op_sbb_u64(a: u64, b: u64, borrow: &mut u64) -> u64 {
     };
 }
 
-pub fn op_add(lhs: &BIGINT, rhs: &BIGINT) -> Vec<u64> {
-    // assume both lhs and rhs are of the same sign, handle sign logic elsewhere
-    debug_assert_eq!(lhs.is_negative(), rhs.is_negative());
-
+fn op_add_magnitude(lhs: &BIGINT, rhs: &BIGINT) -> Vec<u64> {
     let i = lhs.get_repr().len();
     let j = rhs.get_repr().len();
     let k = min(i, j);
@@ -51,9 +48,9 @@ pub fn op_add(lhs: &BIGINT, rhs: &BIGINT) -> Vec<u64> {
     result
 }
 
-pub fn op_sub(lhs: &BIGINT, rhs: &BIGINT) -> Vec<u64> {
-    // assuming lhs > rhs for this to hold, handle all sign logic outside
-    debug_assert!(lhs > rhs);
+fn op_sub_magnitude(lhs: &BIGINT, rhs: &BIGINT) -> Vec<u64> {
+    // assuming lhs >= rhs for this to hold
+    debug_assert!(lhs >= rhs);
 
     let mut result: Vec<u64> = Vec::new();
 
@@ -73,4 +70,25 @@ pub fn op_sub(lhs: &BIGINT, rhs: &BIGINT) -> Vec<u64> {
     }
 
     result
+}
+
+pub fn op_add(lhs: &BIGINT, rhs: &BIGINT) -> BIGINT {
+    let result: Vec<u64> = op_add_magnitude(&lhs, &rhs);
+    
+    // since we are not taking sign into account while adding
+    // resulting sign is always positive
+    BIGINT::new_sign_repr(false, result)
+}
+
+pub fn op_sub(lhs: &BIGINT, rhs: &BIGINT) -> BIGINT {
+    let (signed, a, b) = if lhs >= rhs {
+        (false, &lhs, &rhs)
+    } else {
+        (true, &rhs, &lhs)
+    };
+
+    // a - b will always be possible given we handle sign negation
+    // since a > b, a must have an equal or greater length to b
+    let result = op_sub_magnitude(&a, &b);
+    BIGINT::new_sign_repr(signed, result)
 }
