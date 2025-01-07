@@ -51,8 +51,20 @@ mod tests {
         assert_eq!(b0, BIGINT::new("0"));
 
         let b1 = BIGINT::new("1");
-        let b2 = b1 + b0;
-        assert_eq!(b2, BIGINT::new("1"));
+        let b2 = b1.clone() + b0.clone();
+        assert_eq!(b2, b1);
+
+        let b1 = BIGINT::new("-1");
+        let b2 = b1.clone() + b0.clone();
+        assert_eq!(b2, b1);
+    }
+
+    #[test]
+    fn test_negation() {
+        let b0 = BIGINT::new("0");
+        let b1 = BIGINT::new("-1");
+        let b2 = b0 - b1.clone();
+        assert_eq!(b2, -b1);
     }
 
     #[test]

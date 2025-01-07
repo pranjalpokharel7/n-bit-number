@@ -31,6 +31,11 @@ mod tests {
         let b3 = b1 + b2;
         assert_eq!(b3, BIGINT::new("0"));
 
+        let b1 = BIGINT::new("1");
+        let b2 = BIGINT::new("-10");
+        let b3 = b1 + b2;
+        assert_eq!(b3, BIGINT::new("-9"));
+
         let b1 = BIGINT::new("-100000000000000000000");
         let b2 = BIGINT::new("100000000000000000000");
         let b3 = b1 + b2;
