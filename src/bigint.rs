@@ -1,35 +1,16 @@
 use crate::constants::DIGITS_PER_BLOCK;
 use crate::operation::{op_add, op_sub};
+use crate::utils::{big_n_str_to_vec, coalese_vector};
 use std::ops::{Index, Sub};
 use std::{
     fmt::{Debug, Display},
     ops::{Add, Neg},
-    str::FromStr,
 };
 
 #[derive(Debug, Clone)]
 pub struct BIGINT {
     _signed: bool, // TODO: will handle this later
     _repr: Vec<u64>,
-}
-
-fn big_n_str_to_vec<T: FromStr>(n: &str) -> Vec<T> {
-    let s_len = n.len();
-    let mut j = s_len;
-    let mut i = j.saturating_sub(DIGITS_PER_BLOCK);
-    let mut result: Vec<T> = Vec::new();
-    while j > 0 {
-        let p_res: Result<T, T::Err> = n[i..j].parse();
-        match p_res {
-            Ok(p) => {
-                result.push(p);
-                j = i;
-                i = i.saturating_sub(DIGITS_PER_BLOCK);
-            }
-            Err(_) => panic!("Couldn't parse number - invalid literal"), // TODO: handle where exactly error occurs
-        }
-    }
-    result
 }
 
 impl BIGINT {
@@ -46,7 +27,7 @@ impl BIGINT {
 
         Self {
             _signed: signed,
-            _repr: repr,
+            _repr: Vec::from(coalese_vector(&repr)),
         }
     }
 
@@ -54,7 +35,7 @@ impl BIGINT {
     pub fn new_sign_repr(sign: bool, repr: Vec<u64>) -> BIGINT {
         BIGINT {
             _signed: sign,
-            _repr: repr,
+            _repr: Vec::from(coalese_vector(&repr)), // incurring memory initialization penalty for now
         }
     }
 

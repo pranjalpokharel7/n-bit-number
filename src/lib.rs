@@ -1,6 +1,7 @@
 pub mod bigint;
 pub mod constants;
 pub mod operation;
+pub mod utils;
 
 #[cfg(test)]
 mod tests {
@@ -43,11 +44,21 @@ mod tests {
 
     #[test]
     fn test_signed_operation() {
-        // adding two negative numbers
+        // adding on different signs
         let b1 = BIGINT::new("-1");
         let b2 = BIGINT::new("-1");
         let b3 = b1 + b2;
         assert_eq!(b3, BIGINT::new("-2"));
+
+        let b1 = BIGINT::new("100000000000000000000");
+        let b2 = BIGINT::new("-100000000000000000000");
+        let b3 = b1 + b2;
+        assert_eq!(b3, BIGINT::new("0"));
+
+        let b1 = BIGINT::new("-100000000000000000000");
+        let b2 = BIGINT::new("100000000000000000000");
+        let b3 = b1 + b2;
+        assert_eq!(b3, BIGINT::new("0"));
 
         // subtractions on different signs
         let b1 = BIGINT::new("100000000000000000000");
@@ -59,6 +70,11 @@ mod tests {
         let b2 = BIGINT::new("-100000000000000000000");
         let b3 = b2 - b1;
         assert_eq!(b3, BIGINT::new("-200000000000000000000"));
+
+        let b1 = BIGINT::new("-100000000000000000000");
+        let b2 = BIGINT::new("-100000000000000000000");
+        let b3 = b2 - b1;
+        assert_eq!(b3, BIGINT::new("0"));
     }
 
     #[test]
@@ -73,6 +89,15 @@ mod tests {
         assert!(b1 > b3);
         assert!(b1 > b4);
         assert!(b5 > b4);
+    }
+
+    #[test]
+    fn test_coalesce() {
+        let b1 = BIGINT::new("000000000000000000000000000000000000000000000000000000000000");
+        assert_eq!(b1, BIGINT::new("0"));
+
+        let b1 = BIGINT::new("000000000000000000000000000000000000000000000000000000000001");
+        assert_eq!(b1, BIGINT::new("1"));
     }
 
     #[test]
