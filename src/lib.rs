@@ -118,4 +118,14 @@ mod tests {
         assert_eq!(b3.get_sign(), true);
         assert_eq!(b3, BIGINT::new("-9999999999999999999"));
     }
+
+    #[test]
+    fn test_signed_zero() {
+        let b0 = BIGINT::new("-0");
+        assert_eq!(b0, BIGINT::new("0"));
+
+        let b1 = BIGINT::new("1");
+        let b2 = b1 + b0;
+        assert_eq!(b2, BIGINT::new("1"));
+    }
 }

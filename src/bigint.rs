@@ -1,6 +1,6 @@
 use crate::constants::DIGITS_PER_BLOCK;
 use crate::operation::{op_add, op_sub};
-use crate::utils::{big_n_str_to_vec, coalese_vector};
+use crate::utils::{big_n_str_to_vec, coalesce_vector};
 use std::ops::{Index, Sub};
 use std::{
     fmt::{Debug, Display},
@@ -27,7 +27,7 @@ impl BIGINT {
 
         Self {
             _signed: signed,
-            _repr: Vec::from(coalese_vector(&repr)),
+            _repr: Vec::from(coalesce_vector(&repr)),
         }
     }
 
@@ -35,7 +35,7 @@ impl BIGINT {
     pub fn new_sign_repr(sign: bool, repr: Vec<u64>) -> BIGINT {
         BIGINT {
             _signed: sign,
-            _repr: Vec::from(coalese_vector(&repr)), // incurring memory initialization penalty for now
+            _repr: Vec::from(coalesce_vector(&repr)), // incurring memory initialization penalty for now
         }
     }
 
@@ -58,7 +58,12 @@ impl Index<usize> for BIGINT {
 
 impl PartialEq for BIGINT {
     fn eq(&self, other: &Self) -> bool {
-        self._signed == other._signed && self._repr == other._repr
+        // handle negative zeroes in equality
+        (self._repr.len() == 1
+            && other._repr.len() == 1
+            && self._repr[0] == 0
+            && other._repr[0] == 0)
+            || (self._signed == other._signed && self._repr == other._repr)
     }
 }
 

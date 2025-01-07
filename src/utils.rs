@@ -22,11 +22,11 @@ pub fn big_n_str_to_vec<T: FromStr>(n: &str) -> Vec<T> {
 
 // iterate in reverse until no zeroes are encountered - remove leading zeroes
 // [0,0,0] should be stored as [0] since [0] and [0,0,0] are equivalent
-pub fn coalese_vector(v: &Vec<u64>) -> &[u64] {
+pub fn coalesce_vector(v: &Vec<u64>) -> &[u64] {
     for i in (0..v.len()).rev() {
         if v[i] != 0 {
             return &v[0..=i];
         }
     };
-    return &v[0..0];
+    return &v[0..=0];
 }
