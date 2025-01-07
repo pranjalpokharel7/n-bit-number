@@ -83,6 +83,8 @@ impl PartialEq for BIGINT {
     }
 }
 
+impl Eq for BIGINT {}
+
 // sign handling logic courtesy of chat gpt :)
 impl PartialOrd for BIGINT {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
@@ -98,6 +100,28 @@ impl PartialOrd for BIGINT {
 
                 if self._signed {
                     cmp.map(|ord| ord.reverse())
+                } else {
+                    cmp
+                }
+            }
+        }
+    }
+}
+
+impl Ord for BIGINT {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match (self._signed, other._signed) {
+            (true, false) => std::cmp::Ordering::Less, // negative < positive
+            (false, true) => std::cmp::Ordering::Greater, // positive > negative
+            _ => {
+                let cmp = self
+                    ._repr
+                    .iter()
+                    .rev()
+                    .cmp(other._repr.iter().rev());
+
+                if self._signed {
+                    cmp.reverse()
                 } else {
                     cmp
                 }

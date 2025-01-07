@@ -46,6 +46,19 @@ mod tests {
     }
 
     #[test]
+    fn test_sorting() {
+        let b1 = BIGINT::new("11000000000000000000");
+        let b2 = BIGINT::new("-220000000000000000000");
+        let b3 = BIGINT::new("12000000000000000000");
+        let b4 = BIGINT::new("0");
+        let b5 = BIGINT::new("-90000000000000000000");
+
+        let mut vb = vec![b1.clone(), b2.clone(), b3.clone(), b4.clone(), b5.clone()];
+        vb.sort();
+        assert_eq!(vb, vec![b2, b5, b4, b1, b3]);
+    }
+
+    #[test]
     fn test_signed_zero() {
         let b0 = BIGINT::new("-0");
         assert_eq!(b0, BIGINT::new("0"));
