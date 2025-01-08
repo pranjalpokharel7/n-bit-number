@@ -63,6 +63,9 @@ mod tests {
         let b0 = BIGINT::new("-0");
         assert_eq!(b0, BIGINT::new("0"));
 
+        // negative zero is stored and displayed as positive
+        assert_eq!(b0.to_string(), String::from("0"));
+
         let b1 = BIGINT::new("1");
         let b2 = b1.clone() + b0.clone();
         assert_eq!(b2, b1);
@@ -87,5 +90,21 @@ mod tests {
 
         let b1 = BIGINT::new("000000000000000000000000000000000000000000000000000000000001");
         assert_eq!(b1, BIGINT::new("1"));
+    }
+
+    #[test]
+    fn test_display() {
+        // test there is no loss in information on string conversion
+        let b1 = BIGINT::new("-100000000000000000000000000000000000000000000000000000000000");
+        assert_eq!(
+            b1.to_string(),
+            String::from("-100000000000000000000000000000000000000000000000000000000000")
+        );
+
+        let b1 = BIGINT::new("-1");
+        assert_eq!(b1.to_string(), String::from("-1"));
+
+        let b0 = BIGINT::new("0");
+        assert_eq!(b0.to_string(), String::from("0"));
     }
 }

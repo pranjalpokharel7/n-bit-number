@@ -10,7 +10,7 @@ use std::{
 
 #[derive(Debug, Clone)]
 pub struct BIGINT {
-    _signed: bool, // TODO: will handle this later
+    _signed: bool,
     _repr: Vec<u64>,
 }
 
@@ -171,11 +171,11 @@ impl Display for BIGINT {
         let mut repr_s: Vec<String> = Vec::new();
 
         // since we don't have to pad for the last block (unnecessary leading zeroes)
-        repr_s.push(self._repr[k - 1].to_string());
+        repr_s.push(self[k - 1].to_string());
 
         // iterate in reverse because the numbers are stored least significant block first
-        for i in (0..k.saturating_sub(1)).rev() {
-            let s = self._repr[i].to_string();
+        for i in (0..k-1).rev() {
+            let s = self[i].to_string();
             repr_s.push(format!(
                 "{}{}",
                 "0".repeat((DIGITS_PER_BLOCK - s.len()) as usize),
