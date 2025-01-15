@@ -14,10 +14,27 @@ pub struct BIGINT {
     _repr: Vec<u64>,
 }
 
+// truth table for two variables x and y
+macro_rules! tt_00_01_10_11 {
+    (
+        $x:expr,
+        $y:expr,
+        $z_00:expr,
+        $z_01:expr,
+        $z_10:expr,
+        $z_11:expr
+    ) => {match ($x,$y) {
+        (false, false) => $z_00,
+        (false, true) => $z_01,
+        (true, false) => $z_10,
+        (true, true) => $z_11,
+    }};
+}
+
 impl BIGINT {
     pub fn new(n: &str) -> Self {
         if n.is_empty() {
-            panic!("Invalid number: expected numeric string, got empty.")
+            panic!("Invalid number: expected numeric string, got empty.");
         }
 
         let (mut signed, _repr) = if let Some(n_stripped) = n.strip_prefix("-") {
@@ -85,48 +102,29 @@ impl PartialEq for BIGINT {
 
 impl Eq for BIGINT {}
 
-// sign handling logic courtesy of chat gpt :)
 impl PartialOrd for BIGINT {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        match (self._signed, other._signed) {
-            (true, false) => Some(std::cmp::Ordering::Less), // negative < positive
-            (false, true) => Some(std::cmp::Ordering::Greater), // positive > negative
-            _ => {
-                let cmp = self
-                    ._repr
-                    .iter()
-                    .rev()
-                    .partial_cmp(other._repr.iter().rev());
-
-                if self._signed {
-                    cmp.map(|ord| ord.reverse())
-                } else {
-                    cmp
-                }
-            }
-        }
+        tt_00_01_10_11!(
+            self._signed,
+            other._signed,
+            self._repr.iter().rev().partial_cmp(other._repr.iter().rev()),
+            Some(std::cmp::Ordering::Greater),
+            Some(std::cmp::Ordering::Less),
+            self._repr.iter().rev().partial_cmp(other._repr.iter().rev()).map(|ord| ord.reverse())
+        )
     }
 }
 
 impl Ord for BIGINT {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        match (self._signed, other._signed) {
-            (true, false) => std::cmp::Ordering::Less, // negative < positive
-            (false, true) => std::cmp::Ordering::Greater, // positive > negative
-            _ => {
-                let cmp = self
-                    ._repr
-                    .iter()
-                    .rev()
-                    .cmp(other._repr.iter().rev());
-
-                if self._signed {
-                    cmp.reverse()
-                } else {
-                    cmp
-                }
-            }
-        }
+        tt_00_01_10_11!(
+            self._signed,
+            other._signed,
+            self._repr.iter().rev().cmp(other._repr.iter().rev()),
+            std::cmp::Ordering::Greater,
+            std::cmp::Ordering::Less,
+            self._repr.iter().rev().cmp(other._repr.iter().rev()).reverse()
+        )
     }
 }
 
@@ -143,12 +141,14 @@ impl Sub<BIGINT> for BIGINT {
     type Output = BIGINT;
 
     fn sub(self, rhs: BIGINT) -> Self::Output {
-        match (self._signed, rhs._signed) {
-            (false, false) => op_sub(&self, &rhs),
-            (false, true) => op_add(&self, &rhs),
-            (true, false) => op_add(&self, &rhs).neg(),
-            (true, true) => op_sub(&rhs, &self),
-        }
+        tt_00_01_10_11!(
+            self._signed,
+            rhs._signed,
+            op_sub(&self, &rhs),
+            op_add(&self, &rhs),
+            op_add(&self, &rhs).neg(),
+            op_sub(&rhs, &self)
+        )
     }
 }
 
@@ -156,12 +156,14 @@ impl Add<BIGINT> for BIGINT {
     type Output = BIGINT;
 
     fn add(self, rhs: Self) -> Self::Output {
-        match (self._signed, rhs._signed) {
-            (false, false) => op_add(&self, &rhs),
-            (false, true) => op_sub(&self, &rhs),
-            (true, false) => op_sub(&rhs, &self),
-            (true, true) => op_add(&self, &rhs).neg(),
-        }
+        tt_00_01_10_11!(
+            self._signed,
+            rhs._signed,
+            op_add(&self, &rhs),
+            op_sub(&self, &rhs),
+            op_sub(&rhs, &self),
+            op_add(&self, &rhs).neg()
+        )
     }
 }
 
