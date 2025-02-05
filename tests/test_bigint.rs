@@ -1,12 +1,9 @@
-use n_bit_number::bigint;
-
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use bigint::BIGINT;
+    use n_bit_number::bigint::BIGINT;
 
     #[test]
-    fn test_identity() {
+    fn test_bigint_identity() {
         let identity = BIGINT::new("0");
 
         // additive identity added to itself should be result the same
@@ -21,7 +18,7 @@ mod tests {
     }
 
     #[test]
-    fn test_to_string() {
+    fn test_bigint_to_string() {
         // zero padding test
         let b2 = BIGINT::new("1000000000000000000");
         assert_eq!(b2.to_string(), "1000000000000000000");
@@ -32,7 +29,7 @@ mod tests {
     }
 
     #[test]
-    fn test_comparision() {
+    fn test_bigint_comparision() {
         let b1 = BIGINT::new("11000000000000000000");
         let b2 = BIGINT::new("12000000000000000000");
         let b3 = BIGINT::new("9000000000000000000");
@@ -46,7 +43,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sorting() {
+    fn test_bigint_sorting() {
         let b1 = BIGINT::new("11000000000000000000");
         let b2 = BIGINT::new("-220000000000000000000");
         let b3 = BIGINT::new("12000000000000000000");
@@ -59,7 +56,7 @@ mod tests {
     }
 
     #[test]
-    fn test_signed_zero() {
+    fn test_bigint_signed_zero() {
         let b0 = BIGINT::new("-0");
         assert_eq!(b0, BIGINT::new("0"));
 
@@ -76,7 +73,7 @@ mod tests {
     }
 
     #[test]
-    fn test_negation() {
+    fn test_bigint_negation() {
         let b0 = BIGINT::new("0");
         let b1 = BIGINT::new("-1");
         let b2 = b0 - b1.clone();
@@ -84,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn test_coalesce() {
+    fn test_bigint_coalesce() {
         let b1 = BIGINT::new("000000000000000000000000000000000000000000000000000000000000");
         assert_eq!(b1, BIGINT::new("0"));
 
@@ -93,7 +90,7 @@ mod tests {
     }
 
     #[test]
-    fn test_display() {
+    fn test_bigint_display() {
         // test there is no loss in information on string conversion
         let b1 = BIGINT::new("-100000000000000000000000000000000000000000000000000000000000");
         assert_eq!(

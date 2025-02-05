@@ -2,7 +2,7 @@ use crate::constants::DIGITS_PER_BLOCK;
 use crate::operation::{op_add, op_sub};
 use crate::utils::{big_n_str_to_vec, coalesce_vector};
 use std::cmp::Ordering;
-use std::ops::{Index, Sub};
+use std::ops::{Index, Shl, Shr, Sub};
 use std::{
     fmt::{Debug, Display},
     ops::{Add, Neg},
@@ -15,7 +15,7 @@ pub struct BIGINT {
 }
 
 // truth table for two variables x and y
-macro_rules! tt_00_01_10_11 {
+macro_rules! tt_a_b_00_01_10_11 {
     (
         $x:expr,
         $y:expr,
@@ -23,12 +23,14 @@ macro_rules! tt_00_01_10_11 {
         $z_01:expr,
         $z_10:expr,
         $z_11:expr
-    ) => {match ($x,$y) {
-        (false, false) => $z_00,
-        (false, true) => $z_01,
-        (true, false) => $z_10,
-        (true, true) => $z_11,
-    }};
+    ) => {
+        match ($x, $y) {
+            (false, false) => $z_00,
+            (false, true) => $z_01,
+            (true, false) => $z_10,
+            (true, true) => $z_11,
+        }
+    };
 }
 
 impl BIGINT {
@@ -57,7 +59,7 @@ impl BIGINT {
     }
 
     // need to rename this function (?)
-    pub fn new_sign_repr(signed: bool, repr: Vec<u64>) -> BIGINT {
+    pub fn from_repr(signed: bool, repr: Vec<u64>) -> BIGINT {
         let repr = Vec::from(coalesce_vector(&repr)); // incurring memory initialization penalty for now
 
         // handle negative zero
@@ -104,26 +106,37 @@ impl Eq for BIGINT {}
 
 impl PartialOrd for BIGINT {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        tt_00_01_10_11!(
+        tt_a_b_00_01_10_11!(
             self._signed,
             other._signed,
-            self._repr.iter().rev().partial_cmp(other._repr.iter().rev()),
+            self._repr
+                .iter()
+                .rev()
+                .partial_cmp(other._repr.iter().rev()),
             Some(std::cmp::Ordering::Greater),
             Some(std::cmp::Ordering::Less),
-            self._repr.iter().rev().partial_cmp(other._repr.iter().rev()).map(|ord| ord.reverse())
+            self._repr
+                .iter()
+                .rev()
+                .partial_cmp(other._repr.iter().rev())
+                .map(|ord| ord.reverse())
         )
     }
 }
 
 impl Ord for BIGINT {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        tt_00_01_10_11!(
+        tt_a_b_00_01_10_11!(
             self._signed,
             other._signed,
             self._repr.iter().rev().cmp(other._repr.iter().rev()),
             std::cmp::Ordering::Greater,
             std::cmp::Ordering::Less,
-            self._repr.iter().rev().cmp(other._repr.iter().rev()).reverse()
+            self._repr
+                .iter()
+                .rev()
+                .cmp(other._repr.iter().rev())
+                .reverse()
         )
     }
 }
@@ -141,7 +154,7 @@ impl Sub<BIGINT> for BIGINT {
     type Output = BIGINT;
 
     fn sub(self, rhs: BIGINT) -> Self::Output {
-        tt_00_01_10_11!(
+        tt_a_b_00_01_10_11!(
             self._signed,
             rhs._signed,
             op_sub(&self, &rhs),
@@ -156,7 +169,7 @@ impl Add<BIGINT> for BIGINT {
     type Output = BIGINT;
 
     fn add(self, rhs: Self) -> Self::Output {
-        tt_00_01_10_11!(
+        tt_a_b_00_01_10_11!(
             self._signed,
             rhs._signed,
             op_add(&self, &rhs),
@@ -164,6 +177,53 @@ impl Add<BIGINT> for BIGINT {
             op_sub(&rhs, &self),
             op_add(&self, &rhs).neg()
         )
+    }
+}
+
+impl Shl<u64> for &mut BIGINT {
+    type Output = ();
+
+    fn shl(self, rhs: u64) -> Self::Output {
+        for n in self {
+            *n = *n << rhs;
+        }
+    }
+}
+
+impl Shr<u64> for &mut BIGINT {
+    type Output = ();
+
+    fn shr(self, rhs: u64) -> Self::Output {
+        for n in self {
+            *n = *n >> rhs;
+        }
+    }
+}
+
+impl IntoIterator for BIGINT {
+    type Item = u64;
+    type IntoIter = std::vec::IntoIter<u64>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self._repr.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut BIGINT {
+    type Item = &'a mut u64;
+    type IntoIter = std::slice::IterMut<'a, u64>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self._repr.iter_mut()
+    }
+}
+
+impl<'a> IntoIterator for &'a BIGINT {
+    type Item = &'a u64;
+    type IntoIter = std::slice::Iter<'a, u64>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self._repr.iter()
     }
 }
 
@@ -176,7 +236,7 @@ impl Display for BIGINT {
         repr_s.push(self[k - 1].to_string());
 
         // iterate in reverse because the numbers are stored least significant block first
-        for i in (0..k-1).rev() {
+        for i in (0..k - 1).rev() {
             let s = self[i].to_string();
             repr_s.push(format!(
                 "{}{}",

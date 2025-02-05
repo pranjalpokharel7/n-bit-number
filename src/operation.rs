@@ -74,7 +74,7 @@ pub fn op_add(lhs: &BIGINT, rhs: &BIGINT) -> BIGINT {
 
     // since we are not taking sign into account while adding
     // resulting sign is always positive
-    BIGINT::new_sign_repr(false, result)
+    BIGINT::from_repr(false, result)
 }
 
 pub fn op_sub(lhs: &BIGINT, rhs: &BIGINT) -> BIGINT {
@@ -86,5 +86,5 @@ pub fn op_sub(lhs: &BIGINT, rhs: &BIGINT) -> BIGINT {
     // a - b will always be possible given we handle sign negation
     // since a > b (in magnitude), a must have an equal or greater length to b
     let result = op_sub_magnitude(&a, &b);
-    BIGINT::new_sign_repr(signed, result)
+    BIGINT::from_repr(signed, result)
 }
