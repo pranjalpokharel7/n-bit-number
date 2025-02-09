@@ -1,12 +1,9 @@
 use crate::constants::DIGITS_PER_BLOCK;
-use crate::operation::{op_add, op_sub};
-use crate::utils::{big_n_str_to_vec, coalesce_vector};
+use crate::operation::{ op_add, op_sub };
+use crate::utils::{ big_n_str_to_vec, coalesce_vector };
 use std::cmp::Ordering;
-use std::ops::{Index, Shl, Shr, Sub};
-use std::{
-    fmt::{Debug, Display},
-    ops::{Add, Neg},
-};
+use std::ops::{ Index, Shl, Shr, Sub };
+use std::{ fmt::{ Debug, Display }, ops::{ Add, Neg, Deref } };
 
 #[derive(Debug, Clone)]
 pub struct BIGINT {
@@ -16,14 +13,7 @@ pub struct BIGINT {
 
 // truth table for two variables x and y
 macro_rules! tt_a_b_00_01_10_11 {
-    (
-        $x:expr,
-        $y:expr,
-        $z_00:expr,
-        $z_01:expr,
-        $z_10:expr,
-        $z_11:expr
-    ) => {
+    ($x:expr, $y:expr, $z_00:expr, $z_01:expr, $z_10:expr, $z_11:expr) => {
         match ($x, $y) {
             (false, false) => $z_00,
             (false, true) => $z_01,
@@ -74,16 +64,20 @@ impl BIGINT {
         }
     }
 
-    pub fn get_repr(&self) -> &Vec<u64> {
-        &self._repr
-    }
-
     pub fn get_sign(&self) -> bool {
         self._signed
     }
 
     pub fn compare_magnitude(&self, other: &Self) -> Ordering {
         self._repr.iter().rev().cmp(other._repr.iter().rev())
+    }
+}
+
+impl Deref for BIGINT {
+    type Target = [u64];
+
+    fn deref(&self) -> &Self::Target {
+        &self._repr
     }
 }
 
@@ -109,10 +103,7 @@ impl PartialOrd for BIGINT {
         tt_a_b_00_01_10_11!(
             self._signed,
             other._signed,
-            self._repr
-                .iter()
-                .rev()
-                .partial_cmp(other._repr.iter().rev()),
+            self._repr.iter().rev().partial_cmp(other._repr.iter().rev()),
             Some(std::cmp::Ordering::Greater),
             Some(std::cmp::Ordering::Less),
             self._repr
@@ -132,11 +123,7 @@ impl Ord for BIGINT {
             self._repr.iter().rev().cmp(other._repr.iter().rev()),
             std::cmp::Ordering::Greater,
             std::cmp::Ordering::Less,
-            self._repr
-                .iter()
-                .rev()
-                .cmp(other._repr.iter().rev())
-                .reverse()
+            self._repr.iter().rev().cmp(other._repr.iter().rev()).reverse()
         )
     }
 }
@@ -238,11 +225,7 @@ impl Display for BIGINT {
         // iterate in reverse because the numbers are stored least significant block first
         for i in (0..k - 1).rev() {
             let s = self[i].to_string();
-            repr_s.push(format!(
-                "{}{}",
-                "0".repeat((DIGITS_PER_BLOCK - s.len()) as usize),
-                s
-            ));
+            repr_s.push(format!("{}{}", "0".repeat((DIGITS_PER_BLOCK - s.len()) as usize), s));
         }
 
         let sign = if self._signed { "-" } else { "" };

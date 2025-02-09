@@ -1,5 +1,5 @@
-use crate::{bigint::BIGINT, constants::BLOCK_DIVISION_FACTOR};
-use std::cmp::{min, Ordering};
+use crate::{ bigint::BIGINT, constants::BLOCK_DIVISION_FACTOR };
+use std::cmp::{ min, Ordering };
 
 fn op_adc_u64(a: u64, b: u64, carry: &mut u64) -> u64 {
     let res = a + b + *carry;
@@ -19,9 +19,9 @@ fn op_sbb_u64(a: u64, b: u64, borrow: &mut u64) -> u64 {
     };
 }
 
-fn op_add_magnitude(lhs: &BIGINT, rhs: &BIGINT) -> Vec<u64> {
-    let i = lhs.get_repr().len();
-    let j = rhs.get_repr().len();
+fn op_add_magnitude(lhs: &[u64], rhs: &[u64]) -> Vec<u64> {
+    let i = lhs.len();
+    let j = rhs.len();
     let k = min(i, j);
 
     let mut result: Vec<u64> = Vec::new();
@@ -48,19 +48,19 @@ fn op_add_magnitude(lhs: &BIGINT, rhs: &BIGINT) -> Vec<u64> {
     result
 }
 
-fn op_sub_magnitude(lhs: &BIGINT, rhs: &BIGINT) -> Vec<u64> {
+fn op_sub_magnitude(lhs: &[u64], rhs: &[u64]) -> Vec<u64> {
     let mut result: Vec<u64> = Vec::new();
 
     // a - b will always be possible given we handle sign negation
     // since a > b, a must have an equal or greater length to b
     let mut t = 0;
     let mut bout = 0;
-    while t < rhs.get_repr().len() {
+    while t < rhs.len() {
         result.push(op_sbb_u64(lhs[t], rhs[t], &mut bout));
         t += 1;
     }
 
-    while t < lhs.get_repr().len() {
+    while t < lhs.len() {
         result.push(lhs[t] - bout);
         bout = 0;
         t += 1;
